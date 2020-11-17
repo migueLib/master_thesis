@@ -101,19 +101,17 @@ def train_validation_phase(model, dataset, dataloader, device, epochs,
             # For validation get AUC, loss and accuracy
             if phase == "valid":
                 epoch_auc = sum(auc_vec) / len(auc_vec)
-                print(epoch_auc)
                 vec_auc_val.append(epoch_auc)
                 vec_acc_val.append(epoch_acc)
                 vec_lss_val.append(epoch_lss)
 
             if phase == "valid" and epoch >= 0:
-                if auc - 0.005 >= best_acc:
-                    best_acc = auc
+                if epoch_auc - 0.005 >= best_acc:
+                    best_acc = epoch_auc
                     print(f"new best model  with auroc = {best_acc}")
                     best_model = deepcopy(model.state_dict())
                     torch.save(model.state_dict(), save)
 
-            # If
             if phase == "valid":
                 if len(vec_acc_val) > 5:
                     # past_average_validation_accuracy =  `pava`
@@ -121,24 +119,25 @@ def train_validation_phase(model, dataset, dataloader, device, epochs,
                     if (epoch_acc - pava) < 0.005:
                         logger.info(f"Fine-tune accuracy has not improved "
                                     f"by 0.5% in the last 5 epochs")
+                        
+        ########################################################################
+        # Create results dictionary 
+        results = {
+            "train_accuracy": vec_acc_trn,
+            "train_loss": vec_lss_trn,
+            "validation_accuracy": vec_acc_val,
+            "validation_loss": vec_lss_val,
+            "validation_auc": vec_auc_val,
+            "best_acc": best_acc
+        }
 
-    results = {
-        "train_accuracy": vec_acc_trn,
-        "train_loss": vec_lss_trn,s
-        "validation_accuracy": vec_acc_val,
-        "validation_loss": vec_lss_val,
-        "validation_auc": vec_auc_val,
-        "best_acc": best_acc
-    }
+        # save model per epoch
+        # load best model weights
+        model.load_state_dict(best_model)
+        torch.save(model.state_dict(), save)
 
-    # save model per epoch
-    # load best model weights
-    model.load_state_dict(best_model)
-    torch.save(model.state_dict(), save)
+        # Save the results to a pickle file
+        with open(f"{save}_results.pkl", "wb") as RESULTS:
+            pickle.dump(results, RESULTS, protocol=pickle.HIGHEST_PROTOCOL)
 
-    # Save the results to a pickle file
-    # Save the results to a pickle file
-    with open(f"{save}_results.pkl", "wb") as RESULTS:
-        pickle.dump(results, RESULTS, protocol=pickle.HIGHEST_PROTOCOL)
-    
     return results
