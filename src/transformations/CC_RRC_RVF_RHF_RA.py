@@ -1,27 +1,32 @@
 from torchvision import transforms
 
-def get_transform(crop_size, resize=(299, 299), grayscale=False):
+def get_transform(crop_size=None, resize=(300, 300), grayscale=False):
+    """
+    ORDER IS IMPORTANT HERE
+    """
+    # Create list of transformations
+    transform_list = list()
     
+    # Center crop the image
+    if crop_size is not None:
+        transform_list.append(transforms.CenterCrop(crop_size))
+    
+    # Vertical and Horizontal flips, affine
+    transform_list.append(transforms.RandomVerticalFlip())
+    transform_list.append(transforms.RandomHorizontalFlip())
+    transform_list.append(transforms.RandomAffine(90))
+    
+    # Grayscale
     if grayscale:
-        TRANSFORM = transforms.Compose([
-            transforms.CenterCrop(crop_size),
-            transforms.RandomResizedCrop(500),
-            transforms.RandomVerticalFlip(),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomAffine(90),
-            transforms.Resize(resize),
-            transforms.Grayscale(num_output_channels=3),
-            transforms.ToTensor()
-        ])
-    else:
-        TRANSFORM = transforms.Compose([
-            transforms.CenterCrop(crop_size),
-            transforms.RandomResizedCrop(500),
-            transforms.RandomVerticalFlip(),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomAffine(90),
-            transforms.Resize(resize),
-            transforms.ToTensor()
-        ])
+        transform_list.append(transforms.Grayscale(num_output_channels=3))
+    
+    # Resize image
+    transform_list.append(transforms.Resize(resize))
+    
+    # Move images to tensors
+    transform_list.append(transforms.ToTensor())
+    
+    # Compose transformations
+    TRANSFORM = transforms.Compose(transform_list)
     
     return TRANSFORM
