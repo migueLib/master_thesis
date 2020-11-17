@@ -7,9 +7,8 @@ import numpy as np
 
 def imshow(img, title, save, show=False):
     "Show sample images for tensor"
-    img = img/2 +0.5
     npimg = img.numpy().transpose((1, 2, 0))
-    plt.imshow(npimg)
+    plt.matshow(npimg)
     plt.axis("off")
 
     if title is not None:
