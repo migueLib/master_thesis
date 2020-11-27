@@ -1,6 +1,6 @@
 from torchvision import transforms
 
-def get_transform(crop_size=None, resize=(300, 300), grayscale=False):
+def get_transform(crop_size=None, resize=(300, 300), grayscale=False, randomcrop=False):
     """
     ORDER IS IMPORTANT HERE
     """
@@ -20,6 +20,10 @@ def get_transform(crop_size=None, resize=(300, 300), grayscale=False):
     if grayscale:
         transform_list.append(transforms.Grayscale(num_output_channels=3))
     
+    # Random crop
+    if randomcrop:
+        transform_list.append(transforms.RandomCrop(size=randomcrop))
+        
     # Resize image
     transform_list.append(transforms.Resize(resize))
     
