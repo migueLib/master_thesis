@@ -84,6 +84,7 @@ def train_validation_phase(model, dataset, dataloader, device, epochs,
                 running_true += torch.sum(labels.data == predicted)
 
                 if phase == "valid":
+                    # ROC-AUC 
                     auc = roc_auc_score(labels.cpu(), predicted.cpu())
                     auc_vec.append(auc)
 
