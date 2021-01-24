@@ -11,20 +11,20 @@ def set_logger(level=""):
 
     # Starting a logger
     logger = logging.getLogger()
-    error = logging.ERROR
+    error  = logging.ERROR
 
     # Determine log level
     if level == 'debug':
         _level = logging.DEBUG
     else:
         _level = logging.INFO
-
+        
     # Set the level in logger
     logger.setLevel(_level)
 
     # Set the log format
     log_fmt = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-
+    
     # Set logger output to STDOUT and STDERR
     log_handler = logging.StreamHandler(stream=sys.stdout)
     err_handler = logging.StreamHandler(stream=sys.stderr)

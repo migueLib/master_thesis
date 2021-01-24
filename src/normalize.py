@@ -1,11 +1,9 @@
-import cv2, glob, numpy
+import cv2, glob
+import numpy as np
 import os
 from os.path import abspath
 import matplotlib.pyplot as plt
 from multiprocessing import Pool
-import matplotlib.image as mpimg
-from skimage.transform import resize
-from PIL import Image
 import argparse
 from argparse import ArgumentParser as AP
 from tqdm import tqdm
@@ -61,47 +59,78 @@ def is_image(f):
 
     return flag
 
+def get_radius(img):
+    """
+    Gets the radius of a Fundus photograph at the x axis
+    """
+    # Gets the pixels in the midle (vertically) of the Fundus
+    # Then sums their RGB values
+    x = img[img.shape[0]//2, : , :].sum(1)
+    
+    # Use 1/10 of the mean as a threshold, 
+    # anything above count it as part of the eye
+    # This value is the radius
+    r = (x > x.mean()/10).sum()/2
+    
+    return r
 
-def normalize_image(image):
+
+def normalize_image(img):
     """
-    Normalize image 
+    Normalizes image 
     """
-    gaussian_blur = cv2.GaussianBlur(image, (0, 0), 1000/30)
-    normalized_im = cv2.addWeighted(image, 4, gaussian_blur, -4, 128)
+    # Get radius of the image
+    r = get_radius(img)
+    
+    # This will ensure that even if a figure contains no fundus (or is black) the script won't stop
+    r = 690 if r==0 else r 
+    
+    # Calculate the Gaussian Blur based on the radius
+    gaussian_blur = cv2.GaussianBlur(src=img, ksize=(0, 0), sigmaX=r/30)
+    
+    # Blend GB and Original Image
+    normalized_im = cv2.addWeighted(src1=img, alpha=4, src2=gaussian_blur, beta=-4, gamma=128)
+    
+    # Create a circular mask to remove the outter 1%
+    # (This will avoid frontier effects)
+    mask = np.zeros((img.shape[0], img.shape[1]), dtype=np.uint8)
+    cv2.circle(img=mask, center=(img.shape[1]//2, img.shape[0]//2), radius=int(r*0.99), color=(1,1,1,1), thickness=-1, lineType=8, shift=0)
+    
+    # Apply mask
+    normalized_im = cv2.bitwise_and(normalized_im, normalized_im, mask=mask)
     
     return normalized_im
 
-   
-
+            
 def normalize_folder(in_folder, out_folder):
     """
-    Normalize folder image
+    Normalize folder
     """
-    path = str(in_folder) + "/**"
-    
-    # Make directory if it does not exist
-    Path(out_folder).mkdir(parents=True, exist_ok=True)
-        
-    # Iterate over the source folder and normalize the images
-    for f in tqdm(glob.glob(path, recursive=True), leave=True):
-        
-        if is_image(f):
-            # Original image
-            ori_img = cv2.imread(f)
+    for r, d, files in os.walk(in_folder):
 
-            # Normalize image
-            normalized_im = normalize_image(ori_img)
+        # Recreate structure from input folder
+        r_i = Path(*Path(r).parts[len(Path(in_folder).parts):])
+        r_o = Path(os.path.join(out_folder, r_i))
+        r_o.mkdir(parents=True, exist_ok=True)
 
-            # normalization according to the instructions
-            out_name = os.path.join(str(out_folder), os.path.basename(f))
-            
-            # Save image and prints a message if not safe 
-            if not cv2.imwrite(f"{out_name[:-4]}.png", normalized_im):
-                print(f"{f} was not normalized")
+        # Iterate over each file
+        for f in tqdm(files, leave=True):
 
-        else:
-            print(f"{f} is not an Image")
+            # Check if file is an image
+            if is_image(f):
 
+                # Load image
+                ori_img = cv2.imread(os.path.join(r, f))
+
+                # Normalize image
+                nor_img = normalize_image(ori_img)
+
+                # Save image and print a message if the image was not saved
+                if not cv2.imwrite(f"{os.path.join(r_o, f)[:-4]}.png", nor_img):
+                    print(f"{f} was not normalzied")
+
+            else:
+                print(f"{f} is not an image")
             
 def main(arg):
     # Normalize images
@@ -116,12 +145,12 @@ if __name__ == "__main__":
     args = get_args()
 
     # Set logger
-    # logger = sl("info")
+    logger = sl("info")
     
     # Initial Report
-    # logger.info(f"Python version {sys.version}")
-    # logger.info(f"Working directory {os.getcwd()}")
-    # logger.info(f"Usable CPUs {os.cpu_count()}")
+    logger.info(f"Python version {sys.version}")
+    logger.info(f"Working directory {os.getcwd()}")
+    logger.info(f"Usable CPUs {os.cpu_count()}")
     
     # Main
     main(args)
