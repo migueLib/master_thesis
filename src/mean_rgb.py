@@ -25,14 +25,14 @@ def get_args():
 
     # noinspection PyTypeChecker
     parser = AP(description=description,
-               formatter_class=argparse.RawDescriptionHelpFormatter)
+                formatter_class=argparse.RawDescriptionHelpFormatter)
 
     paths = parser.add_argument_group(title="Required Output",
-                                     description="Paths")
+                                      description="Paths")
     paths.add_argument("-s", "--src", dest="src", action="store",
-                      required=True, help="Source path")
+                       required=True, help="Source path")
     paths.add_argument("-o", "--out", dest="out", action="store",
-                      required=True, help="Output path")
+                       required=True, help="Output path")
     arg = parser.parse_args()
 
     # Standardize paths
@@ -40,6 +40,7 @@ def get_args():
     arg.out = abspath(arg.out)
 
     return arg
+
 
 def rgbmean4im_parallel(image):
     """
@@ -60,6 +61,7 @@ def rgbmean4im_parallel(image):
 def main(arg):
     # Make a list with all the images
     logger.info(f"Making list of files with absolute paths")
+    logger.info(f"Input data from {arg.src}")
     images = [f"{arg.src}/{f}" for f in os.listdir(arg.src)]
 
     # Run in parallel
