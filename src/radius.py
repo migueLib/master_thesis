@@ -47,13 +47,13 @@ def rad4im_parallel(image):
 
     :Arguments:
         image (str): Pathway to the Fundus image
-        
+
     :Returns:
         image (str): Pathway to the Fundus image
         r (float): The radius of the Fundus image
     """
-    a = Fundus(image)
-    r = a.get_radius()
+    f = Fundus(image)
+    r = f.get_radius()
     return image, r
 
 
