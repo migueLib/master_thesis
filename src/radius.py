@@ -1,6 +1,6 @@
 # Import
 import os
-from os.path import abspath
+from os.path import abspath, basename
 import cv2
 import argparse
 from argparse import ArgumentParser as AP
@@ -43,10 +43,18 @@ def get_args():
 
 def rad4im_parallel(image):
     """
-    Calculates the radius for a given image
+    Calculates the radius of a given Fundus image
+
+    :Arguments:
+        image (str): Pathway to the Fundus image
+        
+    :Returns:
+        image (str): Pathway to the Fundus image
+        r (float): The radius of the Fundus image
     """
     a = Fundus(image)
-    return image, a.get_radius()
+    r = a.get_radius()
+    return image, r
 
 
 def main(arg):
@@ -61,7 +69,7 @@ def main(arg):
 
     # Output results file
     logger.info(f"Output files to {arg.out}")
-    res = [[i,r] for i,r in results]
+    res = [[basename(i),r] for i,r in results]
     res_frame = pd.DataFrame(res, columns=["image", "radius"])
     res_frame.to_csv(arg.out, index=False)
 
