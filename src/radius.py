@@ -33,6 +33,7 @@ def get_args():
                       required=True, help="Source path")
     paths.add_argument("-o", "--out", dest="out", action="store",
                       required=True, help="Output path")
+
     arg = parser.parse_args()
 
     # Standardize paths
@@ -60,6 +61,7 @@ def rad4im_parallel(image):
 def main(arg):
     # Make a list with all the images
     logger.info(f"Making list of files with absolute paths")
+    logger.info(f"Input data from {arg.src}")
     images = [f"{arg.src}/{f}" for f in os.listdir(arg.src)]
 
     # Run in parallel
