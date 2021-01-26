@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 class Fundus():
 
     def __init__(self, source=False, **kwargs):
@@ -18,38 +19,57 @@ class Fundus():
             except:
                 print(source)
 
-
         # Get palette r, g, b
         self.r, self.g, self.b = self._get_rgb()
-
 
     @staticmethod
     def _image_from_file(path):
         return cv2.imread(path)
-
-    def show(self):
-        plt.matshow(self.im[:,:,::-1])
-        plt.axis("off")
 
     def _get_rgb(self):
         r, g, b = self.im.T
         r, g, b = r.flatten(), g.flatten(), b.flatten()
         return r, g, b
 
-    def get_radius(self, threshold = 10):
+    def show(self):
+        plt.matshow(self.im[:, :, ::-1])
+        plt.axis("off")
+
+    def get_radius(self, threshold=10):
         """
         Gets the radius of a Fundus photograph at the x axis
         """
-        # Gets the pixels in the midle (vertically) of the Fundus
+        # Gets the pixels in the middle (vertically) of the Fundus
         # Then sums their RGB values
-        x = self.im[self.im.shape[0]//2, : , :].sum(1)
+        x = self.im[self.im.shape[0] // 2, :, :].sum(1)
 
         # Use 1/10 of the mean as a threshold,
         # anything above count it as part of the eye
         # This value is the radius
-        r = (x > x.mean()/threshold).sum()/2
+        r = (x > x.mean() / threshold).sum() / 2
 
         return r
+
+    def normalize(self, r):
+        """
+        Normalizes Fundus image
+        """
+        # Calculate the Gaussian Blur based on the radius
+        gaussian_blur = cv2.GaussianBlur(src=self.im, ksize=(0, 0), sigmaX=r / 30)
+
+        # Blend GB and Original Image
+        normalized_im = cv2.addWeighted(src1=self.im, alpha=4, src2=gaussian_blur, beta=-4, gamma=128)
+
+        # Create a circular mask to remove the outer 2%
+        # (This will avoid frontier effects)
+        mask = np.zeros((self.im.shape[0], self.im.shape[1]), dtype=np.uint8)
+        cv2.circle(img=mask, center=(self.im.shape[1] // 2, self.im.shape[0] // 2), radius=int(r * 0.98),
+                   color=(1, 1, 1, 1), thickness=-1, lineType=8, shift=0)
+
+        # Apply mask
+        normalized_im = cv2.bitwise_and(normalized_im, normalized_im, mask=mask)
+
+        return normalized_im
 
     def get_rgb_mean(self):
         """
@@ -68,6 +88,3 @@ class Fundus():
 
     def g_b(self):
         return len(set(zip(self.g, self.b)))
-
-    def palette_len(self):
-        return len(self.palette)
