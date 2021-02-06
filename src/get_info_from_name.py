@@ -14,4 +14,4 @@ def get_info_from_name(x):
     clean = os.path.splitext(os.path.basename(x))[0]
     clean = clean.split("_")
     clean[1] = "left" if clean[1] == "21015" else "right"
-    return pd.Series(clean, index=["patient", "side", "samples", "replicates"])
+    return pd.Series(clean, index=["patient_id", "eye_side", "visit", "replica"])
