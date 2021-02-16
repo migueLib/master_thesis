@@ -49,6 +49,28 @@ class Fundus():
         r = (x > x.mean() / threshold).sum() / 2
 
         return r
+    
+    def apply_mask(self, mask):
+        """
+        Applies a mask to the Fundus image
+        """
+        return cv2.bitewise_and(self.im, self.im, mask=mask)
+    
+    def get_circular_mask(self, r):
+        """
+        Calculates a centered circular mask
+        """
+        mask = np.zeros((self.im.shape[0], self.im.shape[1]), dtype=np.uint8)
+        cv2.circle(img=mask, center=(self.im.shape[1] // 2, self.im.shape[0] // 2), radius=int(r),
+                   color=(1, 1, 1, 1), thickness=-1, lineType=8, shift=0)
+        return mask
+    
+    def get_threshold_mask(self, channel=2, value=10):
+        """
+        Generates a mask based on an RGB value
+        """
+        mask = (self.img[:,:,channel] > value).astype(np.uint8)
+        return mask
 
     def normalize(self, r):
         """
@@ -60,11 +82,9 @@ class Fundus():
         # Blend GB and Original Image
         normalized_im = cv2.addWeighted(src1=self.im, alpha=4, src2=gaussian_blur, beta=-4, gamma=128)
 
-        # Create a circular mask to remove the outer 2%
+        # Create a circular mask to remove the outer 5%
         # (This will avoid frontier effects)
-        mask = np.zeros((self.im.shape[0], self.im.shape[1]), dtype=np.uint8)
-        cv2.circle(img=mask, center=(self.im.shape[1] // 2, self.im.shape[0] // 2), radius=int(r * 0.98),
-                   color=(1, 1, 1, 1), thickness=-1, lineType=8, shift=0)
+        mask = self.get_circular_mask(r*0.95)
 
         # Apply mask
         normalized_im = cv2.bitwise_and(normalized_im, normalized_im, mask=mask)
