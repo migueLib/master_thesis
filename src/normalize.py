@@ -53,13 +53,13 @@ def from_folder(src: str, dst: str) -> None:
 
         # Iterate over each file
         for f in files:
-
+            
             # Load image
             original = Fundus(os.path.join(r, f))
 
             # Normalize image
-            nor_img = original.normalize(682)
-
+            nor_img = original.normalize()
+                
             # Save image and print a message if the image was not saved
             if not cv2.imwrite(f"{os.path.join(r_o, f)[:-4]}.png", nor_img):
                 print(f"{f} was not normalized")
@@ -95,7 +95,7 @@ def from_file(src: str, dst: str) -> None:
         original = Fundus(f)
 
         # Normalize image
-        nor_img = original.normalize(682)
+        nor_img = original.normalize()
 
         # Save image and print a message if the image was not saved
         if not cv2.imwrite(f"{os.path.join(output_folder, basename(f))[:-4]}.png", nor_img):

@@ -9,15 +9,16 @@ import matplotlib.pyplot as plt
 
 
 class Fundus():
-
+    
+    # Constructors depending on source, if source is file use opencv
     def __init__(self, source=False, **kwargs):
 
-        # Constructors depending on source
-        if isinstance(source, str):
-            try:
-                self.im = self._image_from_file(source)
-            except:
-                print(source)
+        # Check if file exists if not print error
+        if os.path.isfile(source):
+            self.im = self._image_from_file(source)
+        else:
+            print(f"{source} does not exist")
+
 
         # Get palette r, g, b
         self.r, self.g, self.b = self._get_rgb()
@@ -72,10 +73,13 @@ class Fundus():
         mask = (self.img[:,:,channel] > value).astype(np.uint8)
         return mask
 
-    def normalize(self, r):
+    def normalize(self, r=None):
         """
         Normalizes Fundus image
         """
+        # Calculate the radius to normalize
+        r = r if r is not None else self.get_radius()
+        
         # Calculate the Gaussian Blur based on the radius
         gaussian_blur = cv2.GaussianBlur(src=self.im, ksize=(0, 0), sigmaX=r / 30)
 
@@ -96,6 +100,13 @@ class Fundus():
         Gets the mean values for RGB
         """
         return np.mean(self.r), np.mean(self.g), np.mean(self.b)
+    
+    def get_rgb_std(self):
+        """
+        Gets the standar deviation for the RGB values of the fundus
+        """
+        return np.std(self.r), np.std(self.g), np.std(self.b)
+        
 
     def get_palette(self):
         return set(zip(self.r, self.g, self.b))
