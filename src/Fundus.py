@@ -25,6 +25,7 @@ class Fundus():
 
     @staticmethod
     def _image_from_file(path):
+        self.path = path
         return cv2.imread(path)
 
     def _get_rgb(self):
@@ -36,7 +37,7 @@ class Fundus():
         plt.matshow(self.im[:, :, ::-1])
         plt.axis("off")
 
-    def get_radius(self, threshold=10):
+    def get_radius(self, threshold=1000):
         """
         Gets the radius of a Fundus photograph at the x axis
         """
@@ -81,7 +82,10 @@ class Fundus():
         r = r if r is not None else self.get_radius()
         
         # Calculate the Gaussian Blur based on the radius
-        gaussian_blur = cv2.GaussianBlur(src=self.im, ksize=(0, 0), sigmaX=r / 30)
+        try:
+            gaussian_blur = cv2.GaussianBlur(src=self.im, ksize=(0, 0), sigmaX=r / 30)
+        except:
+            raise ValueError(f'r={r} for {self.path}')
 
         # Blend GB and Original Image
         normalized_im = cv2.addWeighted(src1=self.im, alpha=4, src2=gaussian_blur, beta=-4, gamma=128)
