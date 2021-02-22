@@ -12,20 +12,23 @@ class Fundus():
     
     # Constructors depending on source, if source is file use opencv
     def __init__(self, source=False, **kwargs):
-
+        self.path = None
+        
         # Check if file exists if not print error
         if os.path.isfile(source):
             self.im = self._image_from_file(source)
+            self.path = source
         else:
-            print(f"{source} does not exist")
-
-
+            raise TypeError (f"{source} is not valid")
+        
+        # Get H, W, C
+        self.h, self.w, self.c = self.im.shape
+        
         # Get palette r, g, b
         self.r, self.g, self.b = self._get_rgb()
 
     @staticmethod
     def _image_from_file(path):
-        self.path = path
         return cv2.imread(path)
 
     def _get_rgb(self):
@@ -36,27 +39,57 @@ class Fundus():
     def show(self):
         plt.matshow(self.im[:, :, ::-1])
         plt.axis("off")
-
-    def get_radius(self, threshold=1000):
+    
+    def get_radius(self, threshold=1):
         """
         Gets the radius of a Fundus photograph at the x axis
         """
-        # Gets the pixels in the middle (vertically) of the Fundus
+        # Gets the pixels in the middle (h//2) of the Fundus
         # Then sums their RGB values
         x = self.im[self.im.shape[0] // 2, :, :].sum(1)
 
-        # Use 1/10 of the mean as a threshold,
-        # anything above count it as part of the eye
+        # Use a threshold, anything above it counts as part of the eye
         # This value is the radius
-        r = (x > x.mean() / threshold).sum() / 2
+        r = (x >= threshold).sum() // 2
 
         return r
     
     def apply_mask(self, mask):
         """
-        Applies a mask to the Fundus image
+        Applies any mask to the Fundus image
         """
-        return cv2.bitewise_and(self.im, self.im, mask=mask)
+        self.im = cv2.bitwise_and(self.im, self.im, mask=mask)
+        
+    def apply_circular_mask(self, r):
+        """
+        Applies a circular mask, based on a given radius
+        to the Fundus image
+        """
+        mask = self.get_circular_mask(r)
+        self.apply_mask(mask)
+        
+    def apply_center_crop(self, w, h):
+        """
+        Applies a center cropp, takes new width and height 
+        """
+        # Get middle point 
+        xc = self.w//2
+        yc = self.h//2
+
+        # Get new y and x 
+        x = xc - w//2
+        y = yc - h//2
+
+        self.im = self.im[int(y):int(y+h), int(x):int(x+w)]
+        
+    def apply_scale_radius(self, scale, threshold=1):
+        """
+        Resizes the image based on a radial scale
+        """
+        s = (scale*1.0)/self.get_radius(threshold)
+        
+        self.im = cv2.resize(self.im, (0,0), fx=s, fy=s)
+
     
     def get_circular_mask(self, r):
         """
@@ -67,11 +100,11 @@ class Fundus():
                    color=(1, 1, 1, 1), thickness=-1, lineType=8, shift=0)
         return mask
     
-    def get_threshold_mask(self, channel=2, value=10):
+    def get_threshold_mask(self, channel=2, threshold=10):
         """
         Generates a mask based on an RGB value
         """
-        mask = (self.img[:,:,channel] > value).astype(np.uint8)
+        mask = (self.img[:,:,channel] > threshold).astype(np.uint8)
         return mask
 
     def normalize(self, r=None):
