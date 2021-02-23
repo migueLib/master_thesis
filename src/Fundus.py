@@ -24,6 +24,9 @@ class Fundus():
         # Get H, W, C
         self.h, self.w, self.c = self.im.shape
         
+        # Get dim
+        self.dim = (self.h, self.w)
+        
         # Get palette r, g, b
         self.r, self.g, self.b = self._get_rgb()
 
@@ -39,6 +42,12 @@ class Fundus():
     def show(self):
         plt.matshow(self.im[:, :, ::-1])
         plt.axis("off")
+    
+    def save(self, path):
+        """
+        Saves image object to a path
+        """
+        cv2.imwrite(path, self.im)
     
     def get_radius(self, threshold=1):
         """
