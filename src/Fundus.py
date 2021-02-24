@@ -152,16 +152,40 @@ class Fundus():
         Gets the standar deviation for the RGB values of the fundus
         """
         return np.std(self.r), np.std(self.g), np.std(self.b)
+    
+    def get_rgb_min(self):
+        """
+        Gets the minimum value for each RGB channel
+        """
+        return np.amin(self.r), np.amin(self.g), np.amin(self.b)
+    
+    def get_rgb_max(self):
+        """
+        Gets the maximum value for each RGB channel
+        """
+        return np.amax(self.r), np.amax(self.g), np.amax(self.b)
+    
+    def get_rgb_median(self):
+        """
+        Gets the median for each RGB channel
+        """
+        return np.median(self.r), np.median(self.g), np.median(self.b)
+    
+    def get_rgb_stats(self):
+        """
+        Gets min, max, mean, median and standard deviation for each
+        RGB channel of the fundus.
+        """
+        min_r, min_g, min_b = self.get_rgb_min()
+        max_r, max_g, max_b = self.get_rgb_max()
+        mea_r, mea_g, mea_b = self.get_rgb_mean()
+        med_r, med_g, med_b = self.get_rgb_median()
+        std_r, std_g, std_b = self.get_rgb_std()
         
-
+        return min_r, min_g, min_b, max_r, max_g, max_b, mea_r, mea_g, mea_b, med_r, med_g, med_b, std_r, std_g, std_b
+        
     def get_palette(self):
+        """
+        Gets the unique pixel values on the Fundus
+        """
         return set(zip(self.r, self.g, self.b))
-
-    def r_g(self):
-        return len(set(zip(self.r, self.g)))
-
-    def r_b(self):
-        return len(set(zip(self.r, self.b)))
-
-    def g_b(self):
-        return len(set(zip(self.g, self.b)))
