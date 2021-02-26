@@ -31,12 +31,6 @@ class Fundus():
     def _image_from_file(path):
         return cv2.imread(path)
 
-    def get_pixels(self, mask=None):
-        """
-        Gets a flattened list of pixels, if a mask is provided it will mask the pixels accordingly
-        """
-        return self.im[mask].reshape((-1,3)) if mask is not None else self.im.reshape((-1, 3))
-
     def show(self):
         """
         Uses matplotlib to show the image
@@ -49,6 +43,18 @@ class Fundus():
         Saves image object to a path
         """
         cv2.imwrite(path, self.im)
+    
+    def resize(self, path):
+        """
+        Resizes the Fundus image
+        """
+        self.im = cv2.resize(self.im, (0,0), fx=s, fy=s) 
+    
+    def get_pixels(self, mask=None):
+        """
+        Gets a flattened list of pixels, if a mask is provided it will mask the pixels accordingly
+        """
+        return self.im[mask].reshape((-1,3)) if mask is not None else self.im.reshape((-1, 3))
     
     def get_radius(self, threshold=1):
         """
@@ -63,6 +69,14 @@ class Fundus():
         r = (x >= threshold).sum() // 2
 
         return r
+    
+    def get_threshold_mask(self, mode=None, threshold=10):
+        """
+        Generates a mask based on an RGB value
+        """
+        mask = (self.im[:,:,channel] > threshold)
+        return mask
+
     
     def apply_mask(self, mask):
         """
@@ -110,13 +124,6 @@ class Fundus():
                    color=(1, 1, 1, 1), thickness=-1, lineType=8, shift=0)
         return mask
     
-    def get_threshold_mask(self, channel=2, threshold=10):
-        """
-        Generates a mask based on an RGB value
-        """
-        mask = (self.im[:,:,channel] > threshold)
-        return mask
-
     def normalize(self, r=None):
         """
         Normalizes Fundus image
@@ -159,8 +166,10 @@ class Fundus():
         
         return min_r, min_g, min_b, max_r, max_g, max_b, med_r, med_g, med_b, mea_r, mea_g, mea_b, std_r, std_g, std_b
         
-    def get_palette(self):
+    def get_palette(self, mask=None):
         """
         Gets the unique pixel values on the Fundus
         """
-        pass
+        pix = self.get_pixels(mask)
+        
+        return set(zip(pix[:,0], pix[:,1], pix[:,2]))
