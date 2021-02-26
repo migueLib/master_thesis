@@ -44,11 +44,11 @@ class Fundus():
         """
         cv2.imwrite(path, self.im)
     
-    def resize(self, path):
+    def resize(self, new_size):
         """
         Resizes the Fundus image
         """
-        self.im = cv2.resize(self.im, (0,0), fx=s, fy=s) 
+        self.im = cv2.resize(self.im, new_size) 
     
     def get_pixels(self, mask=None):
         """
