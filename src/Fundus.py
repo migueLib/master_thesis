@@ -74,7 +74,7 @@ class Fundus():
         """
         Generates a mask based on an RGB value
         """
-        mask = (self.im[:,:,channel] > threshold)
+        mask = (self.im[:,:,mode] > threshold)
         return mask
 
     
