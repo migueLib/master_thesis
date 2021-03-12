@@ -20,12 +20,6 @@ class Fundus():
             self.path = source
         else:
             raise TypeError (f"{source} is not valid")
-        
-        # Get H, W, C
-        self.h, self.w, self.c = self.im.shape
-        
-        # Get dim
-        self.dim = (self.h, self.w)
 
     @staticmethod
     def _image_from_file(path):
@@ -70,14 +64,23 @@ class Fundus():
 
         return r
     
-    def get_threshold_mask(self, mode=None, threshold=10):
+    def get_threshold_mask(self, mode=None, threshold=1):
         """
         Generates a mask based on an RGB value
         """
-        mask = (self.im[:,:,mode] > threshold)
+        if mode=="r":
+            mask = (self.im[:,:,0] >= threshold)
+        elif mode=="g":
+            mask = (self.im[:,:,1] >= threshold)
+        elif mode=="b":
+            mask = (self.im[:,:,2] >= threshold)
+        elif mode == "sum":
+            mask = (self.im.sum(axis=2) >= threshold)
+        else:
+            print(f"{mode} is an invalid mode")
+        
         return mask
 
-    
     def apply_mask(self, mask):
         """
         Applies any mask to the Fundus image
@@ -96,9 +99,12 @@ class Fundus():
         """
         Applies a center cropp, takes new width and height 
         """
+        # Get H, W, C
+        oh, ow, _ = self.im.shape
+        
         # Get middle point 
-        xc = self.w//2
-        yc = self.h//2
+        xc = ow//2
+        yc = oh//2
 
         # Get new y and x 
         x = xc - w//2
@@ -124,7 +130,31 @@ class Fundus():
                    color=(1, 1, 1, 1), thickness=-1, lineType=8, shift=0)
         return mask
     
-    def normalize(self, r=None):
+    def apply_normalization(self, r=None):
+        """
+        Applies normalization to the Fundus image
+        """
+        # Calculate the radius to normalize
+        r = r if r is not None else self.get_radius()
+        
+        # Calculate the Gaussian Blur based on the radius
+        try:
+            gaussian_blur = cv2.GaussianBlur(src=self.im, ksize=(0, 0), sigmaX=r / 30)
+        except:
+            raise ValueError(f'r={r} for {self.path}')
+
+        # Blend GB and Original Image
+        normalized_im = cv2.addWeighted(src1=self.im, alpha=4, src2=gaussian_blur, beta=-4, gamma=128)
+
+        # Create a circular mask to remove the outer 5%
+        # (This will avoid frontier effects)
+        mask = self.get_circular_mask(r*0.95)
+
+        # Apply mask
+        self.im = cv2.bitwise_and(normalized_im, normalized_im, mask=mask)
+
+    
+    def get_normalization(self, r=None):
         """
         Normalizes Fundus image
         """
