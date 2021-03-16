@@ -6,7 +6,7 @@ import numpy as np
 
 
 def imshow(img, title, save, show=False):
-    "Show sample images for tensor"
+    # Show sample images for tensor
     npimg = img.numpy().transpose((1, 2, 0))
     plt.matshow(npimg)
     plt.axis("off")
@@ -15,15 +15,15 @@ def imshow(img, title, save, show=False):
         plt.title(title)
     
     if save is not None:
-        Path("./output/").mkdir(parents=True, exist_ok=True)
-        plt.savefig(f'./output/{save}-sample.png', bbox_inches='tight')
+        Path("./out/").mkdir(parents=True, exist_ok=True)
+        plt.savefig(f'./out/{save}-sample.png', bbox_inches='tight')
 
     if show:
         plt.show()
     
     
 def plot_images(loader, classes, title=None, save=None):
-    "loading a batch of images and labels"
+    # loading a batch of images and labels
     images, labels = next(iter(loader))
     images, labels = images[:8], labels[:8]
     
