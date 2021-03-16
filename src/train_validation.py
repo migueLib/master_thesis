@@ -22,7 +22,7 @@ def train_validation_phase(model, dataset, dataloader, device, epochs,
 
     vec_acc_val = []
     vec_lss_val = []
-    vec_auc_val = []
+    #vec_auc_val = []
 
     best_acc = 0.0
     best_model = None
@@ -42,7 +42,6 @@ def train_validation_phase(model, dataset, dataloader, device, epochs,
             # Initializing per/epoch variables
             running_loss = 0.0
             running_true = 0
-            auc_vec = []
 
             # Iterate over data
             # Train a mini-batch a time
@@ -61,11 +60,11 @@ def train_validation_phase(model, dataset, dataloader, device, epochs,
                         outputs, aux = model(inputs)
                     except ValueError:
                         outputs = model(inputs)
-
+                    
                     _, predicted = torch.max(outputs, 1)
-
+                                        
                     # Calculate loss function
-                    loss = criterion(outputs, labels)
+                    loss = criterion(outputs, torch.max(labels, 1)[0])
 
                     # Backward and optimize if in training phase
                     if phase == "train":
@@ -81,12 +80,8 @@ def train_validation_phase(model, dataset, dataloader, device, epochs,
                 running_loss += loss.item() * inputs.size(0)
 
                 # noinspection PyTypeChecker
-                running_true += torch.sum(labels.data == predicted)
+                running_true += torch.sum(torch.max(labels, 1)[0] == predicted)
 
-                if phase == "valid":
-                    # ROC-AUC 
-                    auc = roc_auc_score(labels.cpu(), predicted.cpu())
-                    auc_vec.append(auc)
 
             # Calculate epoch loss and epoch accuracy
             epoch_lss = running_loss / len(dataset[phase])
@@ -101,17 +96,17 @@ def train_validation_phase(model, dataset, dataloader, device, epochs,
 
             # For validation get AUC, loss and accuracy
             if phase == "valid":
-                epoch_auc = sum(auc_vec) / len(auc_vec)
-                vec_auc_val.append(epoch_auc)
+                #epoch_auc = sum(auc_vec) / len(auc_vec)
+                #vec_auc_val.append(epoch_auc)
                 vec_acc_val.append(epoch_acc)
                 vec_lss_val.append(epoch_lss)
 
             if phase == "valid" and epoch >= 0:
-                if epoch_auc - 0.005 >= best_acc:
-                    best_acc = epoch_auc
-                    print(f"new best model  with auroc = {best_acc}")
-                    best_model = deepcopy(model.state_dict())
-                    torch.save(model.state_dict(), save)
+                if epoch_acc - 0.005 >= best_acc:
+                    best_acc = epoch_acc
+                    logger.info(f"!!!New best model with ACC = {best_acc}")
+                    #best_model = deepcopy(model.state_dict())
+                    torch.save(model.state_dict(), f"{save}_best.pth")
 
             if phase == "valid":
                 if len(vec_acc_val) > 5:
@@ -128,14 +123,13 @@ def train_validation_phase(model, dataset, dataloader, device, epochs,
             "train_loss": vec_lss_trn,
             "validation_accuracy": vec_acc_val,
             "validation_loss": vec_lss_val,
-            "validation_auc": vec_auc_val,
             "best_acc": best_acc
         }
 
         # save model per epoch
         # load best model weights
-        model.load_state_dict(best_model)
-        torch.save(model.state_dict(), save)
+        #model.load_state_dict(best_model)
+        torch.save(model.state_dict(), f"{save}_last.pth")
 
         # Save the results to a pickle file
         with open(f"{save}_results.pkl", "wb") as RESULTS:
