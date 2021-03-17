@@ -12,7 +12,7 @@ from torch.utils.data import Dataset
 
 
 
-class FundusDataset(Dataset):
+class FundusDatasetRAM(Dataset):
     def __init__(self, imgs_dir=None, target_file=None, target=None, target_size=300, augment=True):
         # Size to re-scale
         self.target_size = target_size
@@ -39,12 +39,16 @@ class FundusDataset(Dataset):
         # Load csv target file
         self.target_file = pd.read_csv(self.target_file)
 
+        # Get classes and class dictionary
         self.classes = sorted(self.target_file[self.target].unique())
         self.dic = {k:v for v,k in enumerate(self.classes)}
         
         # Get id's from target file
         self.ids = self.target_file['file'].values
-
+        
+        # Load all images to RAM
+        self.target_file["im"] = self.target_file["file"].apply(lambda x: io.imread(join(self.imgs_dir, x)))
+        
         # Get augmentations
         self.augment = augment
         
@@ -80,15 +84,11 @@ class FundusDataset(Dataset):
 
     # Returns iterable
     def __getitem__(self, i):
-        # Get id
-        idx = self.ids[i]
-        img_file = join(self.imgs_dir, idx)
-        
-        # Read image
-        img = Image.open(img_file)
-        
-        img = self.preprocess(img)
+        # Get target
         target = self.target_file[self.target].iloc[i]
-
+        
+        # Get image
+        img = self.target_file["im"].iloc[i]
+        img = self.preprocess(img)
 
         return img, self.dic[target]
