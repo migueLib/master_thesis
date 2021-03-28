@@ -55,6 +55,7 @@ class FundusDatasetRAM(Dataset):
         # Set augmentations to use on training 
         self.augment_transform = transforms.Compose([
             transforms.ToPILImage(),
+            transforms.Resize((300,300)),
             transforms.RandomHorizontalFlip(),
             transforms.RandomVerticalFlip(),
             transforms.RandomAffine(90),
@@ -63,6 +64,7 @@ class FundusDatasetRAM(Dataset):
         
         self.test_transform = transforms.Compose([
             transforms.ToPILImage(),
+            transforms.Resize((300,300)),
             transforms.ToTensor()
         ])
 

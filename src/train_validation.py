@@ -64,7 +64,7 @@ def train_validation_phase(model, dataset, dataloader, device, epochs,
                     _, predicted = torch.max(outputs, 1)
                                         
                     # Calculate loss function
-                    loss = criterion(outputs, torch.max(labels, 1)[0])
+                    loss = criterion(outputs, labels)
 
                     # Backward and optimize if in training phase
                     if phase == "train":
@@ -80,7 +80,7 @@ def train_validation_phase(model, dataset, dataloader, device, epochs,
                 running_loss += loss.item() * inputs.size(0)
 
                 # noinspection PyTypeChecker
-                running_true += torch.sum(torch.max(labels, 1)[0] == predicted)
+                running_true += torch.sum(labels == predicted)
 
 
             # Calculate epoch loss and epoch accuracy
