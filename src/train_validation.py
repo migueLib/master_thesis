@@ -106,7 +106,7 @@ def train_validation_phase(model, dataset, dataloader, device, epochs,
                     best_acc = epoch_acc
                     logger.info(f"!!!New best model with ACC = {best_acc}")
                     #best_model = deepcopy(model.state_dict())
-                    torch.save(model.state_dict(), f"{save}_best.pth")
+                    torch.save(model.module.state_dict(), f"{save}_best.pth")
 
             if phase == "valid":
                 if len(vec_acc_val) > 5:
@@ -129,10 +129,13 @@ def train_validation_phase(model, dataset, dataloader, device, epochs,
         # save model per epoch
         # load best model weights
         #model.load_state_dict(best_model)
-        torch.save(model.state_dict(), f"{save}_last.pth")
+        torch.save(model.module.state_dict(), f"{save}_last.pth")
 
         # Save the results to a pickle file
         with open(f"{save}_results.pkl", "wb") as RESULTS:
             pickle.dump(results, RESULTS, protocol=pickle.HIGHEST_PROTOCOL)
 
     return results
+
+if __name__ == '__main__':
+    pass
